@@ -50,7 +50,6 @@ DIFFICULTIES = {
     "HARD": {"shoot": 0.5, "clone": 0.2}
 }
 
-COMBO_TIME_LIMIT = 1.0
 COMBO_GAUGE_BONUS = 0.5
 STAR_COUNT = 60
 
@@ -264,7 +263,6 @@ class Game:
             pygame.display.update(); self.clock.tick(FPS)
 
     def run(self, diff):
-        # ★AIの色をプレイヤーと違うものにする
         ai_color_choices = [name for name in COLORS.keys() if name != self.player_color_name]
         ai_color_name = random.choice(ai_color_choices)
 
@@ -272,6 +270,9 @@ class Game:
         start_t, game_on, go_t, play_t = pygame.time.get_ticks(), False, 0, 0.0
         particles, damage_texts, shake, p_combo, slow, finish_t, whiteout = [], [], 0, 0, 1.0, 0, 0
         
+        # カウント音管理用
+        last_count_val = 4 
+
         while True:
             sm.update_bgm(finish_t > 0); self.screen.fill(BLACK)
             for s in self.bg_stars:
@@ -289,8 +290,13 @@ class Game:
             if not game_on:
                 cur = 3 - (pygame.time.get_ticks() - start_t) // 1000
                 if cur > 0:
+                    # ★ 数字が変わった瞬間に音を鳴らす
+                    if cur != last_count_val:
+                        sm.play_count()
+                        last_count_val = cur
                     txt = self.count_font.render(str(cur), True, YELLOW); self.screen.blit(txt, (400-txt.get_width()//2, 330))
-                else: sm.play_start(); game_on, go_t = True, pygame.time.get_ticks()
+                else: 
+                    sm.play_start(); game_on, go_t = True, pygame.time.get_ticks()
             else:
                 if finish_t == 0:
                     play_t = (pygame.time.get_ticks() - go_t) / 1000.0
